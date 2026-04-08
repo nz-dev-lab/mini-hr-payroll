@@ -8,7 +8,11 @@ import DepartmentsPage from '@/pages/Departments';
 import AttendancePage from '@/pages/Attendance';
 import PayrollPage from '@/pages/Payroll';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { staleTime: 1000 * 60 * 5 }, // 5-min cache
+  },
+});
 
 export default function App() {
   return (

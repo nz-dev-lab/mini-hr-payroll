@@ -9,6 +9,7 @@ hr-payroll-client/node_modules/
 hr-payroll-client/dist/
 hr-payroll-client/.env
 hr-payroll-client/.env.local
+hr-payroll-client/.env.*.local
 
 # General
 .DS_Store
