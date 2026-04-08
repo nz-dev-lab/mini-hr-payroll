@@ -1,0 +1,15 @@
+# ASP.NET Core
+HrPayroll.Api/bin/
+HrPayroll.Api/obj/
+*.user
+appsettings.Development.json
+
+# Frontend
+hr-payroll-client/node_modules/
+hr-payroll-client/dist/
+hr-payroll-client/.env
+hr-payroll-client/.env.local
+
+# General
+.DS_Store
+*.swp
