@@ -59,13 +59,17 @@ public class DepartmentService : IDepartmentService
         return ToDto(dept, count);
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<DeleteResult> DeleteAsync(int id)
     {
         var dept = await _db.Departments.FindAsync(id);
-        if (dept is null) return false;
+        if (dept is null) return DeleteResult.NotFound;
+
+        var hasEmployees = await _db.Employees.AnyAsync(e => e.DepartmentId == id);
+        if (hasEmployees) return DeleteResult.HasEmployees;
+
         _db.Departments.Remove(dept);
         await _db.SaveChangesAsync();
-        return true;
+        return DeleteResult.Success;
     }
 
     private static DepartmentDto ToDto(Department d, int count) => new()

@@ -12,13 +12,13 @@ export interface Employee {
   isActive: boolean;
 }
 
-export interface Department {
+export interface DepartmentDto {
   id: number;
   name: string;
   description?: string;
   managerId?: number;
   managerName?: string;
-  employeeCount?: number;
+  employeeCount: number;
 }
 
 export interface AttendanceRecord {

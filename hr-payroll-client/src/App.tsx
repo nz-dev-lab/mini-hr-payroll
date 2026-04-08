@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'react-hot-toast';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { AppShell } from '@/components/layout/AppShell';
 import DashboardPage from '@/pages/Dashboard';
@@ -29,6 +30,7 @@ export default function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        <Toaster position="top-right" />
       </QueryClientProvider>
     </ThemeProvider>
   );
