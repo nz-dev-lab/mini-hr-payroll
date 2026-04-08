@@ -5,6 +5,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ============================================================
+   DESIGN TOKEN SYSTEM
+   ============================================================
+   All UI color comes from CSS custom properties defined here.
+   Tailwind utilities (bg-primary, text-primary-foreground, etc.)
+   map to these tokens automatically via shadcn/tailwind.css.
+
+   HOW TO USE
+   ----------
+   ✅ DO use semantic tokens:
+      bg-primary           → brand colour (buttons, active nav)
+      text-primary-foreground → text on primary bg
+      bg-secondary         → subtle background
+      text-muted-foreground → placeholder / hint text
+      border-border        → default borders
+      bg-accent            → hover / highlight background
+      ring-ring            → focus ring
+
+   ✅ Sidebar-specific tokens:
+      bg-sidebar                    → sidebar background
+      text-sidebar-foreground       → sidebar default text
+      bg-sidebar-primary            → active nav item bg
+      text-sidebar-primary-foreground → active nav item text
+      bg-sidebar-accent             → sidebar hover bg
+      text-sidebar-accent-foreground → sidebar hover text
+
+   ❌ DON'T hard-code colours like bg-blue-500.
+      Use tokens so themes work for free.
+
+   ADDING A NEW THEME
+   ------------------
+   1. Add a [data-theme="your-theme"] block below
+   2. Override only the tokens that differ
+   3. Add it to src/lib/themes.ts
+   ============================================================ */
+
 @theme inline {
     --font-heading: var(--font-sans);
     --font-sans: 'Geist Variable', sans-serif;
@@ -48,6 +84,9 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ============================================================
+   BASE (neutral) — structural tokens shared across all themes
+   ============================================================ */
 :root {
     --background: oklch(1 0 0);
     --foreground: oklch(0.145 0 0);
@@ -55,34 +94,81 @@
     --card-foreground: oklch(0.145 0 0);
     --popover: oklch(1 0 0);
     --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
     --secondary: oklch(0.97 0 0);
     --secondary-foreground: oklch(0.205 0 0);
     --muted: oklch(0.97 0 0);
     --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
     --destructive: oklch(0.577 0.245 27.325);
     --border: oklch(0.922 0 0);
     --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --chart-1: oklch(0.646 0.222 41.116);
+    --chart-2: oklch(0.6 0.118 184.704);
+    --chart-3: oklch(0.398 0.07 227.392);
+    --chart-4: oklch(0.828 0.189 84.429);
+    --chart-5: oklch(0.769 0.188 70.08);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
     --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+    --sidebar-ring: var(--ring);
 }
 
+/* ============================================================
+   THEME: Ocean Blue (default)
+   ============================================================ */
+:root,
+[data-theme="ocean-blue"] {
+    --primary: oklch(0.55 0.22 240);
+    --primary-foreground: oklch(1 0 0);
+    --accent: oklch(0.93 0.05 240);
+    --accent-foreground: oklch(0.25 0.1 240);
+    --ring: oklch(0.55 0.22 240);
+
+    --sidebar: oklch(0.975 0.01 240);
+    --sidebar-foreground: oklch(0.2 0.04 240);
+    --sidebar-primary: oklch(0.55 0.22 240);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.9 0.05 240);
+    --sidebar-accent-foreground: oklch(0.25 0.1 240);
+}
+
+/* ============================================================
+   THEME: Teal
+   ============================================================ */
+[data-theme="teal"] {
+    --primary: oklch(0.54 0.14 185);
+    --primary-foreground: oklch(1 0 0);
+    --accent: oklch(0.93 0.04 185);
+    --accent-foreground: oklch(0.22 0.08 185);
+    --ring: oklch(0.54 0.14 185);
+
+    --sidebar: oklch(0.975 0.01 185);
+    --sidebar-foreground: oklch(0.2 0.04 185);
+    --sidebar-primary: oklch(0.54 0.14 185);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.9 0.05 185);
+    --sidebar-accent-foreground: oklch(0.22 0.08 185);
+}
+
+/* ============================================================
+   THEME: Purple
+   ============================================================ */
+[data-theme="purple"] {
+    --primary: oklch(0.55 0.22 295);
+    --primary-foreground: oklch(1 0 0);
+    --accent: oklch(0.93 0.06 295);
+    --accent-foreground: oklch(0.25 0.1 295);
+    --ring: oklch(0.55 0.22 295);
+
+    --sidebar: oklch(0.975 0.015 295);
+    --sidebar-foreground: oklch(0.2 0.04 295);
+    --sidebar-primary: oklch(0.55 0.22 295);
+    --sidebar-primary-foreground: oklch(1 0 0);
+    --sidebar-accent: oklch(0.9 0.06 295);
+    --sidebar-accent-foreground: oklch(0.25 0.1 295);
+}
+
+/* ============================================================
+   DARK MODE — structural tokens (theme colours still apply)
+   ============================================================ */
 .dark {
     --background: oklch(0.145 0 0);
     --foreground: oklch(0.985 0 0);
@@ -90,41 +176,26 @@
     --card-foreground: oklch(0.985 0 0);
     --popover: oklch(0.205 0 0);
     --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
     --secondary: oklch(0.269 0 0);
     --secondary-foreground: oklch(0.985 0 0);
     --muted: oklch(0.269 0 0);
     --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
     --destructive: oklch(0.704 0.191 22.216);
     --border: oklch(1 0 0 / 10%);
     --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    }
+  }
 }
