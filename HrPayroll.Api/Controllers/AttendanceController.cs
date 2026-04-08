@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HrPayroll.Api.DTOs.Attendance;
 using HrPayroll.Api.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace HrPayroll.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class AttendanceController : ControllerBase
 {
     private readonly IAttendanceService _service;
@@ -26,6 +28,7 @@ public class AttendanceController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "Admin,HRManager")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateAttendanceDto dto)
     {
@@ -33,6 +36,7 @@ public class AttendanceController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    [Authorize(Roles = "Admin,HRManager")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {

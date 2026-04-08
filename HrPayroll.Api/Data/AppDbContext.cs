@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using HrPayroll.Api.Models;
 
 namespace HrPayroll.Api.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<AppUser>
 {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
@@ -51,7 +53,7 @@ public class AppDbContext : DbContext
             p.Property(x => x.BasicSalary).HasColumnType("decimal(18,2)");
             p.Property(x => x.Allowances).HasColumnType("decimal(18,2)");
             p.Property(x => x.Deductions).HasColumnType("decimal(18,2)");
-            p.Ignore(x => x.NetSalary); // computed, not stored
+            p.Ignore(x => x.NetSalary);
         });
     }
 }

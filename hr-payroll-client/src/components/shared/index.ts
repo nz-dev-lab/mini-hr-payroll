@@ -5,3 +5,4 @@ export { StatusBadge, type BadgeVariant } from './StatusBadge';
 export { PageHeader } from './PageHeader';
 export { ConfirmDialog } from './ConfirmDialog';
 export { ThemeSwitcher } from './ThemeSwitcher';
+export { ProtectedRoute } from './ProtectedRoute';

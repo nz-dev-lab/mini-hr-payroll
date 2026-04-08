@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using HrPayroll.Api.DTOs.Department;
 using HrPayroll.Api.Services.Interfaces;
@@ -6,6 +7,7 @@ namespace HrPayroll.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class DepartmentsController : ControllerBase
 {
     private readonly IDepartmentService _service;
@@ -23,6 +25,7 @@ public class DepartmentsController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "Admin,HRManager")]
     [HttpPost]
     public async Task<IActionResult> Create(CreateDepartmentDto dto)
     {
@@ -30,6 +33,7 @@ public class DepartmentsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
 
+    [Authorize(Roles = "Admin,HRManager")]
     [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, UpdateDepartmentDto dto)
     {
@@ -37,6 +41,7 @@ public class DepartmentsController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
