@@ -116,6 +116,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseMiddleware<HrPayroll.Api.Middleware.ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

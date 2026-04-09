@@ -1,0 +1,2 @@
+-- TODO: WOR-123 — implement when building the Attendance module
+-- Full SP definition is in WOR-123

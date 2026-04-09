@@ -1,0 +1,2 @@
+-- TODO: WOR-123 — implement when building the Attendance module
+-- CREATE PROCEDURE GetMonthlyAttendance
