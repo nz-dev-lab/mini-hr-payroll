@@ -96,9 +96,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Seed roles and default admin user
+// Apply pending migrations and seed
 using (var scope = app.Services.CreateScope())
 {
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AppUser>>();
 
@@ -121,11 +124,8 @@ using (var scope = app.Services.CreateScope())
 
 app.UseMiddleware<HrPayroll.Api.Middleware.ExceptionHandlingMiddleware>();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseCors("FrontendDev");
 app.UseAuthentication();
