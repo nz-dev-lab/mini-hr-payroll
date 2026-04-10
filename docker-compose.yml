@@ -1,6 +1,7 @@
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    restart: unless-stopped
     environment:
       SA_PASSWORD: ${SA_PASSWORD}
       ACCEPT_EULA: "Y"
@@ -12,6 +13,7 @@ services:
   api:
     build:
       context: ./HrPayroll.Api
+    restart: unless-stopped
     ports:
       - "5050:5050"
     environment:
