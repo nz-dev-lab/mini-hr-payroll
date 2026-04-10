@@ -1,0 +1,28 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      SA_PASSWORD: ${SA_PASSWORD}
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+
+  api:
+    build:
+      context: ./HrPayroll.Api
+    ports:
+      - "5050:5050"
+    environment:
+      ASPNETCORE_URLS: http://+:5050
+      ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=HrPayrollDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+      Jwt__Key: ${JWT_KEY}
+      Jwt__Issuer: HrPayrollApi
+      Jwt__Audience: HrPayrollClient
+      Jwt__ExpiryHours: 8
+    depends_on:
+      - sqlserver
+
+volumes:
+  sqlserver-data:

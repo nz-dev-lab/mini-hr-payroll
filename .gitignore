@@ -14,3 +14,6 @@ hr-payroll-client/.env.*.local
 # General
 .DS_Store
 *.swp
+
+# Docker secrets
+.env
