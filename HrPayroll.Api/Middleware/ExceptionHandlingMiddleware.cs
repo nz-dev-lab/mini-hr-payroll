@@ -47,8 +47,10 @@ public class ExceptionHandlingMiddleware
             50012 => (409, "Insufficient annual leave balance."),
 
             // Payroll errors
-            50020 => (409, "Payroll for this month has already been processed."),
-            50021 => (400, "No active employees found to process payroll."),
+            50051 => (400, "Invalid month or year."),
+            50052 => (409, "Payroll for this month and year has already been processed."),
+            50053 => (404, "Payroll run not found."),
+            50054 => (404, "Employee not found."),
 
             // Department errors
             50030 => (409, "Cannot delete a department with active employees."),

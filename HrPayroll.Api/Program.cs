@@ -83,13 +83,23 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+// CORS — dev defaults + any extra origins supplied via AllowedOrigins env var (e.g. Docker)
+var allowedOrigins = new[]
+{
+    "http://localhost:5173",
+    "http://localhost:5174",
+    "http://192.168.1.103:5173",
+    "http://192.168.1.103:5174",
+};
+var extraOrigins = builder.Configuration
+    .GetValue<string>("AllowedOrigins")?
+    .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+    ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendDev", policy =>
-        policy.WithOrigins(
-                "http://localhost:5174",
-                "http://192.168.1.103:5174"
-              )
+        policy.WithOrigins([.. allowedOrigins, .. extraOrigins])
               .AllowAnyHeader()
               .AllowAnyMethod());
 });
@@ -120,6 +130,8 @@ using (var scope = app.Services.CreateScope())
         await userManager.CreateAsync(admin, "Admin@2024!");
         await userManager.AddToRoleAsync(admin, "Admin");
     }
+
+    await DemoSeeder.SeedAsync(db);
 }
 
 app.UseMiddleware<HrPayroll.Api.Middleware.ExceptionHandlingMiddleware>();

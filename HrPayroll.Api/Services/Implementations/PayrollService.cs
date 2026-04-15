@@ -1,77 +1,74 @@
-using Microsoft.EntityFrameworkCore;
 using HrPayroll.Api.Data;
 using HrPayroll.Api.DTOs.Payroll;
-using HrPayroll.Api.Models;
 using HrPayroll.Api.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace HrPayroll.Api.Services.Implementations;
 
 public class PayrollService : IPayrollService
 {
     private readonly AppDbContext _db;
-
     public PayrollService(AppDbContext db) => _db = db;
 
-    public async Task<IEnumerable<PayrollDto>> GetAllAsync(int? employeeId = null)
-    {
-        var query = _db.PayrollRuns.Include(p => p.Employee).AsQueryable();
-        if (employeeId.HasValue) query = query.Where(p => p.EmployeeId == employeeId.Value);
-        return await query.OrderByDescending(p => p.PeriodStart).Select(p => ToDto(p)).ToListAsync();
-    }
+    // TODO: WOR-125 — implement using stored procedures
+    public async Task<IEnumerable<PayrollDto>> GetAllAsync(int? month = null, int? year = null)
 
+    {
+        var results = await _db.Database.SqlQueryRaw<PayrollDto>(
+            "EXEC GetPayrollRuns @Month, @Year",
+            SP.Param("@Month", month),
+            SP.Param("@Year", year)
+        ).ToListAsync();
+        return results;
+    }
     public async Task<PayrollDto?> GetByIdAsync(int id)
     {
-        var p = await _db.PayrollRuns.Include(p => p.Employee).FirstOrDefaultAsync(p => p.Id == id);
-        return p is null ? null : ToDto(p);
-    }
-
-    public async Task<PayrollDto> CreateAsync(CreatePayrollDto dto)
-    {
-        var run = new PayrollRun
+        var record = await _db.PayrollRuns.FindAsync(id);
+        if (record is null) return null;    
+        return new PayrollDto
         {
-            EmployeeId = dto.EmployeeId,
-            PeriodStart = dto.PeriodStart,
-            PeriodEnd = dto.PeriodEnd,
-            BasicSalary = dto.BasicSalary,
-            Allowances = dto.Allowances,
-            Deductions = dto.Deductions,
-            Status = PayrollStatus.Draft
+            Id = record.Id,
+            Month = record.Month,
+            Year = record.Year,
+            ProcessedAt = record.ProcessedAt,
+            IsLocked = record.IsLocked, 
+            TotalGross = record.TotalGross,
+            TotalNet = record.TotalNet,
         };
-        _db.PayrollRuns.Add(run);
-        await _db.SaveChangesAsync();
-        await _db.Entry(run).Reference(p => p.Employee).LoadAsync();
-        return ToDto(run);
     }
-
-    public async Task<PayrollDto?> UpdateStatusAsync(int id, PayrollStatus status)
+    public async Task<IEnumerable<PayrollLineItemDto>> GetRunDetailsAsync(int payrollRunId)
     {
-        var run = await _db.PayrollRuns.Include(p => p.Employee).FirstOrDefaultAsync(p => p.Id == id);
-        if (run is null) return null;
-        run.Status = status;
-        await _db.SaveChangesAsync();
-        return ToDto(run);
+        return await _db.Database.SqlQueryRaw<PayrollLineItemDto>(
+            "EXEC GetPayrollRunDetails @PayrollRunId",
+            SP.Param("@PayrollRunId", payrollRunId)
+        ).ToListAsync();
     }
 
+    public async Task<PayslipDto?> GetPayslipAsync(int payrollRunId, int employeeId)
+    {
+        return await _db.Database.SqlQueryRaw<PayslipDto>(
+            "EXEC GetPayslip @PayrollRunId, @EmployeeId",
+            SP.Param("@PayrollRunId", payrollRunId),
+            SP.Param("@EmployeeId", employeeId)
+        ).FirstOrDefaultAsync();
+    }
+
+    public async Task<PayrollDto> ProcessAsync(ProcessPayrollDto dto)
+    {
+        var newParamId = SP.ParamOut("@NewPayrollRunId", System.Data.SqlDbType.Int);
+        await _db.Database.ExecuteSqlRawAsync(
+            "EXEC ProcessMonthlyPayroll @Month, @Year, @NewPayrollRunId OUTPUT",
+            SP.Param("@Month", dto.Month),
+            SP.Param("@Year", dto.Year),
+            newParamId
+        );
+
+        var newId = SP.GetInt(newParamId);
+        if (newId <= 0) throw new Exception("Failed to process payroll.");
+        return await GetByIdAsync(newId) ?? throw new Exception("Failed to retrieve payroll run.");
+    }
     public async Task<bool> DeleteAsync(int id)
     {
-        var run = await _db.PayrollRuns.FindAsync(id);
-        if (run is null) return false;
-        _db.PayrollRuns.Remove(run);
-        await _db.SaveChangesAsync();
-        return true;
+        return await _db.PayrollRuns.Where(p => p.Id == id).ExecuteDeleteAsync() > 0;
     }
-
-    private static PayrollDto ToDto(PayrollRun p) => new()
-    {
-        Id = p.Id,
-        EmployeeId = p.EmployeeId,
-        EmployeeName = p.Employee is null ? string.Empty : $"{p.Employee.FirstName} {p.Employee.LastName}",
-        PeriodStart = p.PeriodStart,
-        PeriodEnd = p.PeriodEnd,
-        BasicSalary = p.BasicSalary,
-        Allowances = p.Allowances,
-        Deductions = p.Deductions,
-        NetSalary = p.BasicSalary + p.Allowances - p.Deductions,
-        Status = p.Status
-    };
 }

@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using HrPayroll.Api.Models;
 
 namespace HrPayroll.Api.DTOs.Attendance;
 
@@ -11,9 +10,8 @@ public class CreateAttendanceDto
     [Required]
     public DateOnly Date { get; set; }
 
-    public TimeOnly? CheckIn { get; set; }
-    public TimeOnly? CheckOut { get; set; }
-    public AttendanceStatus Status { get; set; } = AttendanceStatus.Present;
+    [Required, MaxLength(20)]
+    public string Status { get; set; } = "Present";
 
     [MaxLength(500)]
     public string? Notes { get; set; }

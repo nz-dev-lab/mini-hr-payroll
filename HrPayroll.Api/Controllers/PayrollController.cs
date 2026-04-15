@@ -11,12 +11,11 @@ namespace HrPayroll.Api.Controllers;
 public class PayrollController : ControllerBase
 {
     private readonly IPayrollService _service;
-
     public PayrollController(IPayrollService service) => _service = service;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? employeeId) =>
-        Ok(await _service.GetAllAsync(employeeId));
+    public async Task<IActionResult> GetAll([FromQuery] int? month = null, [FromQuery] int? year = null) =>
+        Ok(await _service.GetAllAsync(month, year));
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
@@ -25,20 +24,23 @@ public class PayrollController : ControllerBase
         return result is null ? NotFound() : Ok(result);
     }
 
-    [Authorize(Roles = "Admin,PayrollOfficer")]
-    [HttpPost]
-    public async Task<IActionResult> Create(CreatePayrollDto dto)
+    [HttpGet("{id:int}/details")]
+    public async Task<IActionResult> GetRunDetails(int id) =>
+        Ok(await _service.GetRunDetailsAsync(id));
+
+    [HttpGet("{id:int}/payslip/{employeeId:int}")]
+    public async Task<IActionResult> GetPayslip(int id, int employeeId)
     {
-        var created = await _service.CreateAsync(dto);
-        return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        var result = await _service.GetPayslipAsync(id, employeeId);
+        return result is null ? NotFound() : Ok(result);
     }
 
     [Authorize(Roles = "Admin,PayrollOfficer")]
-    [HttpPatch("{id:int}/status")]
-    public async Task<IActionResult> UpdateStatus(int id, UpdatePayrollStatusDto dto)
+    [HttpPost("process")]
+    public async Task<IActionResult> Process(ProcessPayrollDto dto)
     {
-        var result = await _service.UpdateStatusAsync(id, dto.Status);
-        return result is null ? NotFound() : Ok(result);
+        var result = await _service.ProcessAsync(dto);
+        return Ok(result);
     }
 
     [Authorize(Roles = "Admin")]

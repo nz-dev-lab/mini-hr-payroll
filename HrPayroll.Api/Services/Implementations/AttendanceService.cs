@@ -1,69 +1,62 @@
-using Microsoft.EntityFrameworkCore;
 using HrPayroll.Api.Data;
 using HrPayroll.Api.DTOs.Attendance;
-using HrPayroll.Api.Models;
 using HrPayroll.Api.Services.Interfaces;
-
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
+using System.Security.Cryptography;
 namespace HrPayroll.Api.Services.Implementations;
 
 public class AttendanceService : IAttendanceService
 {
     private readonly AppDbContext _db;
-
     public AttendanceService(AppDbContext db) => _db = db;
 
+    // TODO: WOR-123 — implement using stored procedures
     public async Task<IEnumerable<AttendanceDto>> GetAllAsync(int? employeeId = null, DateOnly? from = null, DateOnly? to = null)
     {
-        var query = _db.AttendanceRecords.Include(a => a.Employee).AsQueryable();
+        var date = from ?? DateOnly.FromDateTime(DateTime.Today);
 
-        if (employeeId.HasValue) query = query.Where(a => a.EmployeeId == employeeId.Value);
-        if (from.HasValue) query = query.Where(a => a.Date >= from.Value);
-        if (to.HasValue) query = query.Where(a => a.Date <= to.Value);
+        var results = await _db.Database.SqlQueryRaw<AttendanceDto>(
+            "EXEC GetMonthlyAttendance @EmployeeId, @Month, @Year",
+            SP.Param("@EmployeeId", employeeId),
+            SP.Param("@Month", date.Month),
+            SP.Param("@Year", date.Year)
+        ).ToListAsync();
 
-        return await query.OrderByDescending(a => a.Date).Select(a => ToDto(a)).ToListAsync();
+        return results;
     }
-
     public async Task<AttendanceDto?> GetByIdAsync(int id)
     {
-        var a = await _db.AttendanceRecords.Include(a => a.Employee).FirstOrDefaultAsync(a => a.Id == id);
-        return a is null ? null : ToDto(a);
+        var record = await _db.AttendanceRecords.Include(a => a.Employee).FirstOrDefaultAsync(a => a.Id == id);
+        if (record is null) return null;
+        return new AttendanceDto
+        {
+            Id = record.Id,
+            EmployeeId = record.EmployeeId,
+            EmployeeName = record.Employee.FullName,
+            Date = record.Date,
+            Status = record.Status,
+            Notes = record.Notes
+        };
     }
-
     public async Task<AttendanceDto> CreateAsync(CreateAttendanceDto dto)
     {
-        var record = new AttendanceRecord
-        {
-            EmployeeId = dto.EmployeeId,
-            Date = dto.Date,
-            CheckIn = dto.CheckIn,
-            CheckOut = dto.CheckOut,
-            Status = dto.Status,
-            Notes = dto.Notes
-        };
-        _db.AttendanceRecords.Add(record);
-        await _db.SaveChangesAsync();
-        await _db.Entry(record).Reference(a => a.Employee).LoadAsync();
-        return ToDto(record);
-    }
+        var newIdParam = SP.ParamOut("@NewRecordId", System.Data.SqlDbType.Int);
 
+        var result = await _db.Database.ExecuteSqlRawAsync(
+            "EXEC MarkAttendance @EmployeeId, @Date, @Status, @Notes, @NewRecordId OUTPUT",
+            SP.Param("@EmployeeId", dto.EmployeeId),
+            SP.Param("@Date", dto.Date),
+            SP.Param("@Status", dto.Status),
+            SP.Param("@Notes", dto.Notes),
+            newIdParam
+        );
+
+        var newId = SP.GetInt(newIdParam);
+        return await GetByIdAsync(newId) ?? throw new Exception("Failed to retrieve newly created attendance record.");
+    }
     public async Task<bool> DeleteAsync(int id)
     {
-        var record = await _db.AttendanceRecords.FindAsync(id);
-        if (record is null) return false;
-        _db.AttendanceRecords.Remove(record);
-        await _db.SaveChangesAsync();
-        return true;
+        return await _db.AttendanceRecords.Where(a => a.Id == id).ExecuteDeleteAsync() > 0;
     }
-
-    private static AttendanceDto ToDto(AttendanceRecord a) => new()
-    {
-        Id = a.Id,
-        EmployeeId = a.EmployeeId,
-        EmployeeName = a.Employee is null ? string.Empty : $"{a.Employee.FirstName} {a.Employee.LastName}",
-        Date = a.Date,
-        CheckIn = a.CheckIn,
-        CheckOut = a.CheckOut,
-        Status = a.Status,
-        Notes = a.Notes
-    };
 }

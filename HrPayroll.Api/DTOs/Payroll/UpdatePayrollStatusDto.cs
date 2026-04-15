@@ -1,10 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using HrPayroll.Api.Models;
 
 namespace HrPayroll.Api.DTOs.Payroll;
 
-public class UpdatePayrollStatusDto
+public class ProcessPayrollDto
 {
+    [Required, Range(1, 12)]
+    public int Month { get; set; }
+
     [Required]
-    public PayrollStatus Status { get; set; }
+    public int Year { get; set; }
 }

@@ -16,7 +16,11 @@ BEGIN
         e.Nationality,
         e.VisaType,
         e.Status,
-        (e.BasicSalary + e.HousingAllowance + e.TransportAllowance) AS GrossSalary
+        (e.BasicSalary + e.HousingAllowance + e.TransportAllowance) AS GrossSalary,
+        NULL AS AnnualLeaveEntitlement,
+        NULL AS AnnualLeaveUsed,
+        NULL AS AnnualLeaveRemaining,
+        NULL AS SickLeaveUsed
     FROM Employees e
     INNER JOIN Departments d ON e.DepartmentId = d.Id
     WHERE (@Status IS NULL OR e.Status = @Status)

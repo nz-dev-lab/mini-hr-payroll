@@ -1,92 +1,88 @@
-using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
 using HrPayroll.Api.Data;
 using HrPayroll.Api.DTOs.Employee;
-using HrPayroll.Api.Models;
 using HrPayroll.Api.Services.Interfaces;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 
 namespace HrPayroll.Api.Services.Implementations;
 
 public class EmployeeService : IEmployeeService
 {
     private readonly AppDbContext _db;
-
     public EmployeeService(AppDbContext db) => _db = db;
 
-    public async Task<IEnumerable<EmployeeDto>> GetAllAsync()
+    // TODO: WOR-122 — implement using stored procedures
+    public async Task<IEnumerable<EmployeeDto>> GetAllAsync(string? status = null, int? departmentId = null)
     {
-        return await _db.Employees
-            .Include(e => e.Department)
-            .Select(e => ToDto(e))
-            .ToListAsync();
+        var results = await _db.Database.SqlQueryRaw<EmployeeDto>(
+            "EXEC GetAllEmployees @Status, @DepartmentId",
+            new SqlParameter("@Status", (object?)status ?? DBNull.Value),
+            new SqlParameter("@DepartmentId", (object?)departmentId ?? DBNull.Value)
+        ).ToListAsync();
+        return results;
     }
-
     public async Task<EmployeeDto?> GetByIdAsync(int id)
     {
-        var e = await _db.Employees.Include(e => e.Department).FirstOrDefaultAsync(e => e.Id == id);
-        return e is null ? null : ToDto(e);
+        var results = await _db.Database.SqlQueryRaw<EmployeeDto>(
+            "EXEC GetEmployeeById @EmployeeId",
+            SP.Param("@EmployeeId", id)
+        )
+        .ToListAsync();
+        return results.FirstOrDefault();
     }
-
     public async Task<EmployeeDto> CreateAsync(CreateEmployeeDto dto)
-    {
-        var employee = new Employee
-        {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            Phone = dto.Phone,
-            JobTitle = dto.JobTitle,
-            HireDate = dto.HireDate,
-            BaseSalary = dto.BaseSalary,
-            DepartmentId = dto.DepartmentId,
-            IsActive = true
-        };
-        _db.Employees.Add(employee);
-        await _db.SaveChangesAsync();
-        await _db.Entry(employee).Reference(e => e.Department).LoadAsync();
-        return ToDto(employee);
-    }
+{
+    var newIdParam = SP.ParamOut("@NewEmployeeId", System.Data.SqlDbType.Int);
+
+    await _db.Database.ExecuteSqlRawAsync(
+        "EXEC CreateEmployee @FullName, @Designation, @DepartmentId, @JoinDate, @Nationality, @VisaType, @EmiratesId, @BankAccount, @BasicSalary, @HousingAllowance, @TransportAllowance, @NewEmployeeId OUTPUT",
+        SP.Param("@FullName", dto.FullName),
+        SP.Param("@Designation", dto.Designation),
+        SP.Param("@DepartmentId", dto.DepartmentId),
+        SP.Param("@JoinDate", dto.JoinDate),
+        SP.Param("@Nationality", dto.Nationality),
+        SP.Param("@VisaType", dto.VisaType),
+        SP.Param("@EmiratesId", dto.EmiratesId),
+        SP.Param("@BankAccount", dto.BankAccount),
+        SP.Param("@BasicSalary", dto.BasicSalary),
+        SP.Param("@HousingAllowance", dto.HousingAllowance),
+        SP.Param("@TransportAllowance", dto.TransportAllowance),
+        newIdParam
+    );
+
+    var newId = SP.GetInt(newIdParam);
+    return (await GetByIdAsync(newId))!;
+}
 
     public async Task<EmployeeDto?> UpdateAsync(int id, UpdateEmployeeDto dto)
     {
-        var employee = await _db.Employees.Include(e => e.Department).FirstOrDefaultAsync(e => e.Id == id);
-        if (employee is null) return null;
+        var exists = await GetByIdAsync(id);
+        if (exists is null) return null;
 
-        if (dto.FirstName is not null) employee.FirstName = dto.FirstName;
-        if (dto.LastName is not null) employee.LastName = dto.LastName;
-        if (dto.Email is not null) employee.Email = dto.Email;
-        if (dto.Phone is not null) employee.Phone = dto.Phone;
-        if (dto.JobTitle is not null) employee.JobTitle = dto.JobTitle;
-        if (dto.HireDate is not null) employee.HireDate = dto.HireDate.Value;
-        if (dto.BaseSalary is not null) employee.BaseSalary = dto.BaseSalary.Value;
-        if (dto.DepartmentId is not null) employee.DepartmentId = dto.DepartmentId.Value;
-        if (dto.IsActive is not null) employee.IsActive = dto.IsActive.Value;
-
-        await _db.SaveChangesAsync();
-        await _db.Entry(employee).Reference(e => e.Department).LoadAsync();
-        return ToDto(employee);
+        await _db.Database.ExecuteSqlRawAsync(
+            "EXEC UpdateEmployee @EmployeeId, @FullName, @Designation, @DepartmentId, @JoinDate, @Nationality, @VisaType, @EmiratesId, @BankAccount, @BasicSalary, @HousingAllowance, @TransportAllowance",
+            SP.Param("@EmployeeId", id),
+            SP.Param("@FullName", dto.FullName),
+            SP.Param("@Designation", dto.Designation),
+            SP.Param("@DepartmentId", dto.DepartmentId),
+            SP.Param("@JoinDate", dto.JoinDate),
+            SP.Param("@Nationality", dto.Nationality),
+            SP.Param("@VisaType", dto.VisaType),
+            SP.Param("@EmiratesId", dto.EmiratesId),
+            SP.Param("@BankAccount", dto.BankAccount),
+            SP.Param("@BasicSalary", dto.BasicSalary),
+            SP.Param("@HousingAllowance", dto.HousingAllowance),
+            SP.Param("@TransportAllowance", dto.TransportAllowance)
+        );
+        return (await GetByIdAsync(id))!;
     }
-
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> TerminateAsync(int id)
     {
-        var employee = await _db.Employees.FindAsync(id);
-        if (employee is null) return false;
-        _db.Employees.Remove(employee);
-        await _db.SaveChangesAsync();
-        return true;
+        var rows = await _db.Database.ExecuteSqlRawAsync(
+            "EXEC TerminateEmployee @EmployeeId",
+            SP.Param("@EmployeeId", id)
+        );
+        return rows > 0;
     }
-
-    private static EmployeeDto ToDto(Employee e) => new()
-    {
-        Id = e.Id,
-        FirstName = e.FirstName,
-        LastName = e.LastName,
-        Email = e.Email,
-        Phone = e.Phone,
-        JobTitle = e.JobTitle,
-        HireDate = e.HireDate,
-        BaseSalary = e.BaseSalary,
-        IsActive = e.IsActive,
-        DepartmentId = e.DepartmentId,
-        DepartmentName = e.Department?.Name ?? string.Empty
-    };
 }

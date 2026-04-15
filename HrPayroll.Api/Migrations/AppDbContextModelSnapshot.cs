@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace HrPayroll.Api.Data.Migrations
+namespace HrPayroll.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     partial class AppDbContextModelSnapshot : ModelSnapshot
@@ -99,12 +99,6 @@ namespace HrPayroll.Api.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<TimeOnly?>("CheckIn")
-                        .HasColumnType("time");
-
-                    b.Property<TimeOnly?>("CheckOut")
-                        .HasColumnType("time");
-
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
 
@@ -114,12 +108,14 @@ namespace HrPayroll.Api.Data.Migrations
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                    b.HasIndex("EmployeeId", "Date")
+                        .IsUnique();
 
                     b.ToTable("AttendanceRecords");
                 });
@@ -132,20 +128,17 @@ namespace HrPayroll.Api.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("ManagerId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ManagerId");
 
                     b.ToTable("Departments");
                 });
@@ -158,50 +151,134 @@ namespace HrPayroll.Api.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("BaseSalary")
+                    b.Property<string>("BankAccount")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("BasicSalary")
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("DepartmentId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Email")
+                    b.Property<string>("Designation")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("FirstName")
+                    b.Property<string>("EmiratesId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeCode")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("HireDate")
-                        .HasColumnType("date");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("JobTitle")
+                    b.Property<string>("FullName")
                         .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastName")
+                    b.Property<decimal>("HousingAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("JoinDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Nationality")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Phone")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("TransportAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("VisaType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("Email")
+                    b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("HrPayroll.Api.Models.LeaveBalance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnnualLeaveEntitlement")
+                        .HasColumnType("int");
+
+                    b.Property<int>("AnnualLeaveUsed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SickLeaveUsed")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
                         .IsUnique();
 
-                    b.ToTable("Employees");
+                    b.HasIndex("EmployeeId", "Year")
+                        .IsUnique();
+
+                    b.ToTable("LeaveBalances");
+                });
+
+            modelBuilder.Entity("HrPayroll.Api.Models.PayrollLineItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AbsentDays")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("AbsentDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BasicSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GrossSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("HousingAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NetSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PayrollRunId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TransportAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("PayrollRunId");
+
+                    b.ToTable("PayrollLineItems");
                 });
 
             modelBuilder.Entity("HrPayroll.Api.Models.PayrollRun", b =>
@@ -212,30 +289,25 @@ namespace HrPayroll.Api.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Allowances")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("bit");
 
-                    b.Property<decimal>("BasicSalary")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("Deductions")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("EmployeeId")
+                    b.Property<int>("Month")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("PeriodEnd")
-                        .HasColumnType("date");
+                    b.Property<DateTime>("ProcessedAt")
+                        .HasColumnType("datetime2");
 
-                    b.Property<DateOnly>("PeriodStart")
-                        .HasColumnType("date");
+                    b.Property<decimal>("TotalGross")
+                        .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Status")
+                    b.Property<decimal>("TotalNet")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Year")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
 
                     b.ToTable("PayrollRuns");
                 });
@@ -384,36 +456,45 @@ namespace HrPayroll.Api.Data.Migrations
                     b.Navigation("Employee");
                 });
 
-            modelBuilder.Entity("HrPayroll.Api.Models.Department", b =>
-                {
-                    b.HasOne("HrPayroll.Api.Models.Employee", "Manager")
-                        .WithMany()
-                        .HasForeignKey("ManagerId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("Manager");
-                });
-
             modelBuilder.Entity("HrPayroll.Api.Models.Employee", b =>
                 {
                     b.HasOne("HrPayroll.Api.Models.Department", "Department")
                         .WithMany("Employees")
                         .HasForeignKey("DepartmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Department");
                 });
 
-            modelBuilder.Entity("HrPayroll.Api.Models.PayrollRun", b =>
+            modelBuilder.Entity("HrPayroll.Api.Models.LeaveBalance", b =>
                 {
                     b.HasOne("HrPayroll.Api.Models.Employee", "Employee")
-                        .WithMany("PayrollRuns")
-                        .HasForeignKey("EmployeeId")
+                        .WithOne("LeaveBalance")
+                        .HasForeignKey("HrPayroll.Api.Models.LeaveBalance", "EmployeeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("HrPayroll.Api.Models.PayrollLineItem", b =>
+                {
+                    b.HasOne("HrPayroll.Api.Models.Employee", "Employee")
+                        .WithMany("PayrollLineItems")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HrPayroll.Api.Models.PayrollRun", "PayrollRun")
+                        .WithMany("LineItems")
+                        .HasForeignKey("PayrollRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("PayrollRun");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -476,7 +557,14 @@ namespace HrPayroll.Api.Data.Migrations
                 {
                     b.Navigation("AttendanceRecords");
 
-                    b.Navigation("PayrollRuns");
+                    b.Navigation("LeaveBalance");
+
+                    b.Navigation("PayrollLineItems");
+                });
+
+            modelBuilder.Entity("HrPayroll.Api.Models.PayrollRun", b =>
+                {
+                    b.Navigation("LineItems");
                 });
 #pragma warning restore 612, 618
         }

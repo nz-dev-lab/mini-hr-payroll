@@ -11,12 +11,11 @@ namespace HrPayroll.Api.Controllers;
 public class EmployeesController : ControllerBase
 {
     private readonly IEmployeeService _service;
-
     public EmployeesController(IEmployeeService service) => _service = service;
 
     [HttpGet]
-    public async Task<IActionResult> GetAll() =>
-        Ok(await _service.GetAllAsync());
+    public async Task<IActionResult> GetAll([FromQuery] string? status = null, [FromQuery] int? departmentId = null) =>
+        Ok(await _service.GetAllAsync(status, departmentId));
 
     [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById(int id)
@@ -42,10 +41,10 @@ public class EmployeesController : ControllerBase
     }
 
     [Authorize(Roles = "Admin")]
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
+    [HttpPatch("{id:int}/terminate")]
+    public async Task<IActionResult> Terminate(int id)
     {
-        var deleted = await _service.DeleteAsync(id);
-        return deleted ? NoContent() : NotFound();
+        var result = await _service.TerminateAsync(id);
+        return result ? NoContent() : NotFound();
     }
 }

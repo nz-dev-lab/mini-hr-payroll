@@ -1,4 +1,6 @@
 services:
+
+  # ── SQL Server ─────────────────────────────────────────────────────────────
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     restart: unless-stopped
@@ -9,7 +11,15 @@ services:
       - "1433:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      # Wait until SQL Server accepts connections before letting the API start
+      test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$SA_PASSWORD" -C -Q "SELECT 1" || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
+  # ── .NET API ───────────────────────────────────────────────────────────────
   api:
     build:
       context: ./HrPayroll.Api
@@ -23,8 +33,21 @@ services:
       Jwt__Issuer: HrPayrollApi
       Jwt__Audience: HrPayrollClient
       Jwt__ExpiryHours: 8
+      # Allows the nginx-proxied frontend origin (http://localhost) in Docker
+      AllowedOrigins: "http://localhost,http://localhost:80"
     depends_on:
-      - sqlserver
+      sqlserver:
+        condition: service_healthy
+
+  # ── React Frontend (nginx) ─────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./hr-payroll-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api
 
 volumes:
   sqlserver-data:

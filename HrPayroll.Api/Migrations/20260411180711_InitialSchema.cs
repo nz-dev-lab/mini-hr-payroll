@@ -3,10 +3,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace HrPayroll.Api.Data.Migrations
+namespace HrPayroll.Api.Migrations
 {
     /// <inheritdoc />
-    public partial class AddIdentity : Migration
+    public partial class InitialSchema : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -49,6 +49,39 @@ namespace HrPayroll.Api.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Departments",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Departments", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PayrollRuns",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Month = table.Column<int>(type: "int", nullable: false),
+                    Year = table.Column<int>(type: "int", nullable: false),
+                    ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsLocked = table.Column<bool>(type: "bit", nullable: false),
+                    TotalGross = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TotalNet = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PayrollRuns", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -157,6 +190,115 @@ namespace HrPayroll.Api.Data.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "Employees",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Designation = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DepartmentId = table.Column<int>(type: "int", nullable: false),
+                    JoinDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Nationality = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    VisaType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    EmiratesId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BankAccount = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BasicSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    HousingAllowance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TransportAllowance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Employees", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Employees_Departments_DepartmentId",
+                        column: x => x.DepartmentId,
+                        principalTable: "Departments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AttendanceRecords",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeId = table.Column<int>(type: "int", nullable: false),
+                    Date = table.Column<DateOnly>(type: "date", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AttendanceRecords", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AttendanceRecords_Employees_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LeaveBalances",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeId = table.Column<int>(type: "int", nullable: false),
+                    Year = table.Column<int>(type: "int", nullable: false),
+                    AnnualLeaveEntitlement = table.Column<int>(type: "int", nullable: false),
+                    AnnualLeaveUsed = table.Column<int>(type: "int", nullable: false),
+                    SickLeaveUsed = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LeaveBalances", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LeaveBalances_Employees_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PayrollLineItems",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PayrollRunId = table.Column<int>(type: "int", nullable: false),
+                    EmployeeId = table.Column<int>(type: "int", nullable: false),
+                    BasicSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    HousingAllowance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    TransportAllowance = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    GrossSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    AbsentDays = table.Column<int>(type: "int", nullable: false),
+                    AbsentDeduction = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    NetSalary = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PayrollLineItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PayrollLineItems_Employees_EmployeeId",
+                        column: x => x.EmployeeId,
+                        principalTable: "Employees",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PayrollLineItems_PayrollRuns_PayrollRunId",
+                        column: x => x.PayrollRunId,
+                        principalTable: "PayrollRuns",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -195,6 +337,39 @@ namespace HrPayroll.Api.Data.Migrations
                 column: "NormalizedUserName",
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AttendanceRecords_EmployeeId_Date",
+                table: "AttendanceRecords",
+                columns: new[] { "EmployeeId", "Date" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Employees_DepartmentId",
+                table: "Employees",
+                column: "DepartmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveBalances_EmployeeId",
+                table: "LeaveBalances",
+                column: "EmployeeId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveBalances_EmployeeId_Year",
+                table: "LeaveBalances",
+                columns: new[] { "EmployeeId", "Year" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PayrollLineItems_EmployeeId",
+                table: "PayrollLineItems",
+                column: "EmployeeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PayrollLineItems_PayrollRunId",
+                table: "PayrollLineItems",
+                column: "PayrollRunId");
         }
 
         /// <inheritdoc />
@@ -216,10 +391,28 @@ namespace HrPayroll.Api.Data.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "AttendanceRecords");
+
+            migrationBuilder.DropTable(
+                name: "LeaveBalances");
+
+            migrationBuilder.DropTable(
+                name: "PayrollLineItems");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "Employees");
+
+            migrationBuilder.DropTable(
+                name: "PayrollRuns");
+
+            migrationBuilder.DropTable(
+                name: "Departments");
         }
     }
 }
