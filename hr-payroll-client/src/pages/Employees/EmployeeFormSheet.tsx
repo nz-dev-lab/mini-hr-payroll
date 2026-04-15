@@ -28,8 +28,8 @@ const schema = z.object({
   emiratesId:         z.string().optional(),
   bankAccount:        z.string().optional(),
   basicSalary:        z.number({ message: 'Basic salary is required' }).min(0),
-  housingAllowance:   z.number().min(0).default(0),
-  transportAllowance: z.number().min(0).default(0),
+  housingAllowance:   z.number().min(0),
+  transportAllowance: z.number().min(0),
 });
 
 type FormValues = z.infer<typeof schema>;
