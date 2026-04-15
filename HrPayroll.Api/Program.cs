@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -132,6 +133,20 @@ using (var scope = app.Services.CreateScope())
     }
 
     await DemoSeeder.SeedAsync(db);
+
+    // Create / update stored procedures from RunAll.sql
+    var runAllPath = Path.Combine(app.Environment.ContentRootPath, "Database", "RunAll.sql");
+    if (File.Exists(runAllPath))
+    {
+        var sql = await File.ReadAllTextAsync(runAllPath);
+        var batches = Regex.Split(sql, @"^\s*GO\s*$", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        foreach (var batch in batches)
+        {
+            var trimmed = batch.Trim();
+            if (!string.IsNullOrWhiteSpace(trimmed))
+                await db.Database.ExecuteSqlRawAsync(trimmed);
+        }
+    }
 }
 
 app.UseMiddleware<HrPayroll.Api.Middleware.ExceptionHandlingMiddleware>();
