@@ -8,7 +8,7 @@ services:
       SA_PASSWORD: ${SA_PASSWORD}
       ACCEPT_EULA: "Y"
     ports:
-      - "1433:1433"
+      - "14330:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
@@ -25,7 +25,7 @@ services:
       context: ./HrPayroll.Api
     restart: unless-stopped
     ports:
-      - "5050:5050"
+      - "7171:5050"
     environment:
       ASPNETCORE_URLS: http://+:5050
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=HrPayrollDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
@@ -33,8 +33,6 @@ services:
       Jwt__Issuer: HrPayrollApi
       Jwt__Audience: HrPayrollClient
       Jwt__ExpiryHours: 8
-      # Allows the nginx-proxied frontend origin (http://localhost) in Docker
-      AllowedOrigins: "http://localhost,http://localhost:80"
     depends_on:
       sqlserver:
         condition: service_healthy
@@ -45,7 +43,7 @@ services:
       context: ./hr-payroll-client
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "3344:80"
     depends_on:
       - api
 
